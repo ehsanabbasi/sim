@@ -3,7 +3,7 @@ services:
     image: ghcr.io/simstudioai/simstudio:latest
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - '${SIMSTUDIO_HOST_PORT:-3000}:3000'
     deploy:
       resources:
         limits:
@@ -11,8 +11,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-simstudio}
-      - BETTER_AUTH_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      - BETTER_AUTH_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:${SIMSTUDIO_HOST_PORT:-3000}}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:${SIMSTUDIO_HOST_PORT:-3000}}
       # TRUSTED_ORIGINS: comma-separated public origins to trust for auth in
       # addition to NEXT_PUBLIC_APP_URL. Use when serving from multiple domains
       # (apex + www, alias hostnames, reverse-proxy IPs). Empty by default.
@@ -58,8 +58,8 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-simstudio}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:3000}
+      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:${SIMSTUDIO_HOST_PORT:-3000}}
+      - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:${SIMSTUDIO_HOST_PORT:-3000}}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - INTERNAL_API_SECRET=${INTERNAL_API_SECRET}
       - REDIS_URL=${REDIS_URL:-}

@@ -12,6 +12,15 @@ const getEnv = (variable: string): string | undefined => {
   return window.__ENV?.[variable] ?? process.env[variable]
 }
 
+/**
+ * Optional URL from env: empty or whitespace-only values are treated as unset.
+ * Docker Compose `${VAR:-}` and Helm chart defaults often inject `VAR=` for optional keys.
+ */
+const optionalEnvUrl = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+  z.string().url().optional(),
+)
+
 // biome-ignore format: keep alignment for readability
 export const env = createEnv({
   skipValidation: true,
@@ -36,18 +45,18 @@ export const env = createEnv({
 
     // Copilot
     COPILOT_API_KEY:                       z.string().min(1).optional(),           // Secret for internal sim agent API authentication
-    SIM_AGENT_API_URL:                     z.string().url().optional(),            // URL for internal sim agent API
+    SIM_AGENT_API_URL:                     optionalEnvUrl,            // URL for internal sim agent API
     COPILOT_SOURCE_ENV:                    z.enum(['dev', 'staging', 'prod']).optional(), // Source Sim environment sent to mothership for callbacks
-    COPILOT_DEV_URL:                       z.string().url().optional(),            // Sim agent API URL for the dev mothership environment
-    COPILOT_STAGING_URL:                   z.string().url().optional(),            // Sim agent API URL for the staging mothership environment
-    COPILOT_PROD_URL:                      z.string().url().optional(),            // Sim agent API URL for the production mothership environment
-    AGENT_INDEXER_URL:                     z.string().url().optional(),            // URL for agent training data indexer
+    COPILOT_DEV_URL:                       optionalEnvUrl,            // Sim agent API URL for the dev mothership environment
+    COPILOT_STAGING_URL:                   optionalEnvUrl,            // Sim agent API URL for the staging mothership environment
+    COPILOT_PROD_URL:                      optionalEnvUrl,            // Sim agent API URL for the production mothership environment
+    AGENT_INDEXER_URL:                     optionalEnvUrl,            // URL for agent training data indexer
     AGENT_INDEXER_API_KEY:                 z.string().min(1).optional(),           // API key for agent indexer authentication
     COPILOT_STREAM_TTL_SECONDS:            z.number().optional(),                  // Redis TTL for copilot SSE buffer
     COPILOT_STREAM_EVENT_LIMIT:            z.number().optional(),                  // Max events retained per stream
 
     // Database & Storage
-    REDIS_URL:                             z.string().url().optional(),            // Redis connection string for caching/sessions
+    REDIS_URL:                             optionalEnvUrl,            // Redis connection string for caching/sessions
 
     // Payment & Billing
     STRIPE_SECRET_KEY:                     z.string().min(1).optional(),           // Stripe secret key for payment processing
@@ -117,8 +126,8 @@ export const env = createEnv({
     GEMINI_API_KEY_1:                      z.string().min(1).optional(),           // Primary Gemini API key
     GEMINI_API_KEY_2:                      z.string().min(1).optional(),           // Additional Gemini API key for load balancing
     GEMINI_API_KEY_3:                      z.string().min(1).optional(),           // Additional Gemini API key for load balancing
-    OLLAMA_URL:                            z.string().url().optional(),            // Ollama local LLM server URL
-    VLLM_BASE_URL:                         z.string().url().optional(),            // vLLM self-hosted base URL (OpenAI-compatible)
+    OLLAMA_URL:                            optionalEnvUrl,            // Ollama local LLM server URL
+    VLLM_BASE_URL:                         optionalEnvUrl,            // vLLM self-hosted base URL (OpenAI-compatible)
     VLLM_API_KEY:                          z.string().optional(),                  // Optional bearer token for vLLM
     FIREWORKS_API_KEY:                     z.string().optional(),                  // Optional Fireworks AI API key for model listing
     COHERE_API_KEY:                        z.string().min(1).optional(),           // Cohere API key for reranker (rerank-v4.0-pro, rerank-v4.0-fast, rerank-v3.5)
@@ -134,16 +143,16 @@ export const env = createEnv({
     ALLOWED_INTEGRATIONS:                  z.string().optional(),                  // Comma-separated block types to allow (e.g., "slack,github,agent"). Empty = all allowed.
 
     // Azure Configuration - Shared credentials with feature-specific models
-    AZURE_OPENAI_ENDPOINT:                 z.string().url().optional(),            // Shared Azure OpenAI service endpoint
+    AZURE_OPENAI_ENDPOINT:                 optionalEnvUrl,            // Shared Azure OpenAI service endpoint
     AZURE_OPENAI_API_VERSION:              z.string().optional(),                  // Shared Azure OpenAI API version
     AZURE_OPENAI_API_KEY:                  z.string().min(1).optional(),           // Shared Azure OpenAI API key
-    AZURE_ANTHROPIC_ENDPOINT:              z.string().url().optional(),            // Azure Anthropic service endpoint
+    AZURE_ANTHROPIC_ENDPOINT:              optionalEnvUrl,            // Azure Anthropic service endpoint
     AZURE_ANTHROPIC_API_KEY:               z.string().min(1).optional(),           // Azure Anthropic API key
     AZURE_ANTHROPIC_API_VERSION:           z.string().min(1).optional(),           // Azure Anthropic API version (e.g. 2023-06-01)
     KB_OPENAI_MODEL_NAME:                  z.string().optional(),                  // Azure deployment name serving the configured KB embedding model (used only when AZURE_OPENAI_* credentials are set).
     KB_EMBEDDING_MODEL:                    z.string().optional(),                  // Embedding model used for all new knowledge bases. Must be one of the supported model ids; defaults to text-embedding-3-small.
     WAND_OPENAI_MODEL_NAME:                z.string().optional(),                  // Wand generation OpenAI model name (works with both regular OpenAI and Azure OpenAI)
-    OCR_AZURE_ENDPOINT:                    z.string().url().optional(),            // Azure Mistral OCR service endpoint
+    OCR_AZURE_ENDPOINT:                    optionalEnvUrl,            // Azure Mistral OCR service endpoint
     OCR_AZURE_MODEL_NAME:                  z.string().optional(),                  // Azure Mistral OCR model name for document processing
     OCR_AZURE_API_KEY:                     z.string().min(1).optional(),           // Azure Mistral OCR API key
 
@@ -152,11 +161,11 @@ export const env = createEnv({
     VERTEX_LOCATION:                       z.string().optional(),                  // Google Cloud location/region for Vertex AI (defaults to us-central1)
 
     // Monitoring & Analytics
-    TELEMETRY_ENDPOINT:                    z.string().url().optional(),            // Custom telemetry/analytics endpoint
+    TELEMETRY_ENDPOINT:                    optionalEnvUrl,            // Custom telemetry/analytics endpoint
     COST_MULTIPLIER:                       z.number().optional(),                  // Multiplier for cost calculations
     LOG_LEVEL:                             z.enum(['DEBUG', 'INFO', 'WARN', 'ERROR']).optional(), // Minimum log level to display (defaults to ERROR in production, DEBUG in development)
     PROFOUND_API_KEY:                      z.string().min(1).optional(),           // Profound analytics API key
-    PROFOUND_ENDPOINT:                     z.string().url().optional(),            // Profound analytics endpoint
+    PROFOUND_ENDPOINT:                     optionalEnvUrl,            // Profound analytics endpoint
 
     // External Services
     BROWSERBASE_API_KEY:                   z.string().min(1).optional(),           // Browserbase API key for browser automation
@@ -168,9 +177,9 @@ export const env = createEnv({
 
     // Mothership Admin
     MOTHERSHIP_API_ADMIN_KEY:              z.string().min(1).optional(),           // Admin API key for mothership/copilot admin endpoints
-    MOTHERSHIP_DEV_URL:                    z.string().url().optional(),            // Mothership dev environment URL
-    MOTHERSHIP_STAGING_URL:                z.string().url().optional(),            // Mothership staging environment URL
-    MOTHERSHIP_PROD_URL:                   z.string().url().optional(),            // Mothership production environment URL
+    MOTHERSHIP_DEV_URL:                    optionalEnvUrl,            // Mothership dev environment URL
+    MOTHERSHIP_STAGING_URL:                optionalEnvUrl,            // Mothership staging environment URL
+    MOTHERSHIP_PROD_URL:                   optionalEnvUrl,            // Mothership production environment URL
 
     // Infrastructure & Deployment
     NEXT_RUNTIME:                          z.string().optional(),                  // Next.js runtime environment
@@ -270,7 +279,7 @@ export const env = createEnv({
     KB_CONFIG_CHUNK_CONCURRENCY:           z.number().optional().default(10),      // Concurrent PDF chunk OCR processing
 
     // Real-time Communication
-    SOCKET_SERVER_URL:                     z.string().url().optional(),            // WebSocket server URL for real-time features
+    SOCKET_SERVER_URL:                     optionalEnvUrl,            // WebSocket server URL for real-time features
     PORT:                                  z.number().optional(),                  // Main application port
     INTERNAL_API_BASE_URL:                 z.string().optional(),                  // Optional internal base URL for server-side self-calls; must include protocol if set (e.g., http://sim-app.namespace.svc.cluster.local:3000)
     ALLOWED_ORIGINS:                       z.string().optional(),                  // CORS allowed origins
@@ -418,7 +427,7 @@ export const env = createEnv({
     NEXT_PUBLIC_APP_URL:                   z.string().url(),                       // Base URL of the application (e.g., https://www.sim.ai)
 
     // Client-side Services
-    NEXT_PUBLIC_SOCKET_URL:                z.string().url().optional(),            // WebSocket server URL for real-time features
+    NEXT_PUBLIC_SOCKET_URL:                optionalEnvUrl,            // WebSocket server URL for real-time features
     
     // Billing
     NEXT_PUBLIC_BILLING_ENABLED:           z.boolean().optional(),                 // Enable billing enforcement and usage tracking (client-side)
@@ -429,9 +438,9 @@ export const env = createEnv({
 
     // UI Branding & Whitelabeling
     NEXT_PUBLIC_BRAND_NAME:                z.string().optional(),                  // Custom brand name (defaults to "Sim")
-    NEXT_PUBLIC_BRAND_LOGO_URL:            z.string().url().optional(),            // Custom logo URL
-    NEXT_PUBLIC_BRAND_FAVICON_URL:         z.string().url().optional(),            // Custom favicon URL
-    NEXT_PUBLIC_CUSTOM_CSS_URL:            z.string().url().optional(),            // Custom CSS stylesheet URL
+    NEXT_PUBLIC_BRAND_LOGO_URL:            optionalEnvUrl,            // Custom logo URL
+    NEXT_PUBLIC_BRAND_FAVICON_URL:         optionalEnvUrl,            // Custom favicon URL
+    NEXT_PUBLIC_CUSTOM_CSS_URL:            optionalEnvUrl,            // Custom CSS stylesheet URL
     NEXT_PUBLIC_SUPPORT_EMAIL:             z.string().email().optional(),          // Custom support email
 
     NEXT_PUBLIC_E2B_ENABLED:               z.string().optional(),
@@ -440,9 +449,9 @@ export const env = createEnv({
     NEXT_PUBLIC_COHERE_CONFIGURED:         z.string().optional(),              // Hide Cohere API key field on Knowledge block when COHERE_API_KEY is pre-configured server-side
     NEXT_PUBLIC_COPILOT_TRAINING_ENABLED:  z.string().optional(),
     NEXT_PUBLIC_ENABLE_PLAYGROUND:         z.string().optional(),                  // Enable component playground at /playground
-    NEXT_PUBLIC_DOCUMENTATION_URL:         z.string().url().optional(),            // Custom documentation URL
-    NEXT_PUBLIC_TERMS_URL:                 z.string().url().optional(),            // Custom terms of service URL
-    NEXT_PUBLIC_PRIVACY_URL:               z.string().url().optional(),            // Custom privacy policy URL
+    NEXT_PUBLIC_DOCUMENTATION_URL:         optionalEnvUrl,            // Custom documentation URL
+    NEXT_PUBLIC_TERMS_URL:                 optionalEnvUrl,            // Custom terms of service URL
+    NEXT_PUBLIC_PRIVACY_URL:               optionalEnvUrl,            // Custom privacy policy URL
 
     // Theme Customization
     NEXT_PUBLIC_BRAND_PRIMARY_COLOR:       z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),     // Primary brand color (hex format, e.g., "#701ffc")
