@@ -18,7 +18,6 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-dev-encryption-key-at-least-32-chars}
       - API_ENCRYPTION_KEY=${API_ENCRYPTION_KEY:-}
       - INTERNAL_API_SECRET=${INTERNAL_API_SECRET:-dev-internal-api-secret-min-32-chars}
-      - REDIS_URL=${REDIS_URL:-}
       - COPILOT_API_KEY=${COPILOT_API_KEY}
       - SIM_AGENT_API_URL=${SIM_AGENT_API_URL}
       - OLLAMA_URL=${OLLAMA_URL:-http://localhost:11434}
@@ -49,7 +48,6 @@ services:
       - BETTER_AUTH_URL=${BETTER_AUTH_URL:-http://localhost:${SIMSTUDIO_HOST_PORT:-3000}}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET:-dev-secret-at-least-32-characters-long}
       - INTERNAL_API_SECRET=${INTERNAL_API_SECRET:-dev-internal-api-secret-min-32-chars}
-      - REDIS_URL=${REDIS_URL:-}
     depends_on:
       db:
         condition: service_healthy
